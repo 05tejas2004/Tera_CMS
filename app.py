@@ -1223,14 +1223,12 @@ def helpdesk_close(comp_id):
     
     return redirect(url_for('helpdesk_dashboard'))
 
-
 if __name__ == '__main__':
     # Initialize database
     with app.app_context():
         db.create_all()
         print("Database created!")
-        
-        # Create admin user if not exists
+
         if not User.query.filter_by(username='admin').first():
             admin = User(
                 name='System Admin',
@@ -1241,10 +1239,9 @@ if __name__ == '__main__':
             )
             db.session.add(admin)
             db.session.commit()
-            
-    
-    # Create uploads folder
+
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
-    
-    app.run(debug=True)
+
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
