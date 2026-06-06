@@ -81,6 +81,62 @@ function togglePassword() {
     }
 }
 </script>
+{% extends "base.html" %}
+{% block content %}
+<!-- ... existing form ... -->
+
+<script>
+// Check for stored device token on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const storedToken = localStorage.getItem('device_token');
+    
+    if (storedToken) {
+        // Auto login with device token
+        fetch('/auto_login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({device_token: storedToken})
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/dashboard';
+            } else {
+                localStorage.removeItem('device_token');
+            }
+        })
+        .catch(() => localStorage.removeItem('device_token'));
+    }
+});
+</script>
+
+<!-- Modify form submission -->
+<script>
+function handleLogin(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    
+    fetch('/login', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            // Save device token if remember me is checked
+            const rememberMe = document.getElementById('remember_me').checked;
+            if (rememberMe && data.device_token) {
+                localStorage.setItem('device_token', data.device_token);
+            }
+            window.location.href = '/dashboard';
+        } else {
+            alert(data.message || 'Login failed');
+        }
+    });
+}
+</script>
+{% endblock %}
 
 <style>
 @media (max-width: 768px) {
