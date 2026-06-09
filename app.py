@@ -109,6 +109,26 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # Handle AJAX login (from JavaScript)
+    if request.is_json:
+        data = request.get_json()
+        user = User.query.filter_by(username=data.get('username')).first()
+        if user and user.password == data.get('password'):
+            if not user.is_approved:
+                return jsonify({'success': False, 'message': 'Account pending approval'}), 401
+            
+            remember_me = data.get('remember_me', False)
+            login_user(user, remember=remember_me)
+            
+            if remember_me:
+                if not user.device_token:
+                    user.device_token = str(uuid.uuid4())
+                    db.session.commit()
+            
+            return jsonify({'success': True, 'role': user.role})
+        return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
+    
+    # Handle FORM submission (HTML form)
     if request.method == 'POST':
         user = User.query.filter_by(username=request.form['username']).first()
         if user and user.password == request.form['password']:
@@ -124,16 +144,21 @@ def login():
                 if not user.device_token:
                     user.device_token = str(uuid.uuid4())
                     db.session.commit()
-                
-                # Return token to save in localStorage
-                return jsonify({
-                    'success': True,
-                    'device_token': user.device_token,
-                    'role': user.role
-                })
             
-            return jsonify({'success': True, 'role': user.role})
-        return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
+            # ✅ FIX: Redirect to dashboard based on role (NOT JSON!)
+            if user.role == 'Admin':
+                return redirect(url_for('admin_dashboard'))
+            elif user.role == 'Operator':
+                return redirect(url_for('operator_dashboard'))
+            elif user.role == 'HelpDesk':
+                return redirect(url_for('helpdesk_dashboard'))
+            elif user.role == 'FieldEngineer':
+                return redirect(url_for('worker_dashboard'))
+            else:
+                return redirect(url_for('dashboard'))
+        
+        flash('Invalid credentials')
+        return redirect(url_for('login'))
     
     return render_template('login.html')
 
