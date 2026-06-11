@@ -16,7 +16,7 @@ from flask import jsonify
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'tera-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cms.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://tera_cms_user:nvNoXUd6gShjT1emhtVdU1v90iRmFRJw@dpg-d8laqtv7f7vs73fqv1ig-a.oregon-postgres.render.com/tera_cms'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 db = SQLAlchemy(app)
