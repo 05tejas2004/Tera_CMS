@@ -1656,17 +1656,19 @@ def helpdesk_close(comp_id):
 if __name__ == '__main__':
     # Initialize database
     with app.app_context():
-        # ✅ Add missing column to existing database
         try:
-            db.session.execute(text('ALTER TABLE "user" ADD COLUMN device_token VARCHAR(100);'))
-            db.session.commit()  # Make sure to explicitly commit this adjustment!
+            db.session.execute(
+                text('ALTER TABLE "user" ADD COLUMN device_token VARCHAR(100);')
+            )
+            db.session.commit()
             print("Column added successfully!")
         except Exception as e:
             print(f"Column already exists or error: {e}")
-        
+
         db.create_all()
         print("Database created!")
 
+        # Create admin user if not exists
         if not User.query.filter_by(username='admin').first():
             admin = User(
                 name='System Admin',
@@ -1681,6 +1683,12 @@ if __name__ == '__main__':
     # Create uploads folder
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
-    
-    socketio.run(app, debug=True, port=5000)
+
+    # Render deployment
+    socketio.run(
+        app,
+        host='0.0.0.0',
+        port=int(os.environ.get("PORT", 5000)),
+        debug=False
+    )
 
